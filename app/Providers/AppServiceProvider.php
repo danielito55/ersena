@@ -20,10 +20,11 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Bootstrap any application services.
      */
-    public function boot(): void
+    public function boot()
     {
-        // Handle proxied connections including LocalTunnel
-        $this->handleProxiedConnections();
+        if (app()->environment('local')) {
+            URL::forceScheme('https');
+        }
     }
     
     /**
