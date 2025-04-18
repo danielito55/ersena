@@ -7,8 +7,6 @@
     <meta name="theme-color" content="#39A900">
     <title>Login</title>
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-    
     <!-- Preload fonts -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&family=Poppins&display=swap" as="style">
     <link rel="preload" as="image" href="{{ asset('img/logo/logo.png') }}">
