@@ -3,137 +3,284 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Control - SENA</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+    <title>Escaneo SENA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="{{ asset('css/admin.css') }}" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8"></script>
     <link rel="icon" href="{{ asset('img/icon/icon.ico') }}" alt="Icono SENA">
+    <style>
+        :root {
+            --primary-color: #39A900;
+            --accent-color: #38ef7d;
+            --text-color: #2C3E50;
+            --light-bg: #f0f4f8;
+            --white: #ffffff;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--light-bg);
+            min-height: 100vh;
+            color: var(--text-color);
+        }
+        
+        .header {
+            background: var(--white);
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+        }
+        
+        .logo img {
+            height: 40px;
+            width: auto;
+        }
+        
+        .container {
+            padding: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: var(--white);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: transform 0.3s ease;
+        }
+        
+        .card h2 {
+            font-size: 1.2rem;
+            margin-bottom: 16px;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        #reader {
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            aspect-ratio: 1/1;
+            max-height: 60vh;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .form-control {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: #f8fafc;
+            transition: border-color 0.2s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(57, 169, 0, 0.1);
+        }
+        
+        .btn {
+            padding: 12px 16px;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(57, 169, 0, 0.2);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-entrada {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            width: 100%;
+            padding: 16px;
+            font-size: 1.1rem;
+        }
+        
+        .btn-salida {
+            background: linear-gradient(135deg, #4b5563, #374151);
+            width: 100%;
+            padding: 16px;
+            font-size: 1.1rem;
+        }
+        
+        #notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary-color);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            display: none;
+            z-index: 1000;
+            animation: slideUp 0.3s ease-out forwards;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translate(-50%, 100%); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
+        
+        #aprendiz-info {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #64748b;
+        }
+        
+        .info-value {
+            color: #334155;
+        }
+        
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        /* Loading spinner */
+        .loader {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+            display: none;
+        }
+        
+        .btn.loading .loader {
+            display: inline-block;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
-    <header>
+    <div class="header">
         <div class="logo">
-            <img src="{{ asset('img/logo/logo.png') }}" alt="Logo SENA" width="50">
+            <img src="{{ asset('img/logo/logo.png') }}" alt="Logo SENA">
         </div>
         <form action="{{ route('logout') }}" method="POST" style="margin: 0;">
             @csrf
-            <button type="submit" class="btn">Cerrar Sesión</button>
+            <button type="submit" class="btn">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
         </form>
-    </header>
+    </div>
 
     <div class="container">
-        <div class="dashboard-grid">
-            <!-- Scanner QR -->
-            <div class="card">
-                <h2><i class="fas fa-qrcode"></i> Escáner QR</h2>
-                <div id="reader"></div>
-            </div>
+        <!-- Scanner QR -->
+        <div class="card">
+            <h2><i class="fas fa-qrcode"></i> Escanear código QR</h2>
+            <div id="reader"></div>
+        </div>
 
-            <!-- Búsqueda manual -->
-            <div class="card">
-                <h2><i class="fas fa-search"></i> Búsqueda Manual</h2>
-                <div class="search-box">
-                    <input type="text" id="documento" class="form-control" placeholder="Ingrese número de documento">
-                    <button onclick="buscarAprendiz()" class="btn">Buscar</button>
-                </div>
-
-                <!-- Información del aprendiz -->
-                <div id="aprendiz-info" style="display: none;">
-                    <h3>Información del Aprendiz</h3>
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <span class="info-label">Nombre:</span>
-                            <span id="nombre-aprendiz" class="info-value"></span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Documento:</span>
-                            <span id="documento-aprendiz" class="info-value"></span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Programa:</span>
-                            <span id="programa-aprendiz" class="info-value"></span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Ficha:</span>
-                            <span id="ficha-aprendiz" class="info-value"></span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Ambiente:</span>
-                            <span id="ambiente-aprendiz" class="info-value"></span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Equipo:</span>
-                            <span id="equipo-aprendiz" class="info-value"></span>
-                        </div>
-                    </div>
-                    
-                    <div class="btn-group">
-                        <button id="btn-entrada" onclick="registrarAsistencia('entrada')" class="btn btn-entrada">
-                            <i class="fas fa-sign-in-alt"></i> Registrar Entrada
-                        </button>
-                        <button id="btn-salida" onclick="registrarAsistencia('salida')" class="btn btn-salida">
-                            <i class="fas fa-sign-out-alt"></i> Registrar Salida
-                        </button>
-                    </div>
-                </div>
+        <!-- Búsqueda manual -->
+        <div class="card">
+            <h2><i class="fas fa-search"></i> Buscar por documento</h2>
+            <div class="search-box">
+                <input type="text" id="documento" class="form-control" placeholder="Número de documento">
+                <button onclick="buscarAprendiz()" class="btn" id="btn-buscar">
+                    <span class="loader"></span>
+                    <i class="fas fa-search"></i>
+                </button>
             </div>
         </div>
 
-        <!-- Tabla de registros -->
-        <div class="table-container">
-            <h2><i class="fas fa-clipboard-list"></i> Registro de Asistencias</h2>
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Aprendiz</th>
-                            <th>Documento</th>
-                            <th>Programa</th>
-                            <th>Ficha</th>
-                            <th>Equipo</th>
-                            <th>Hora Entrada</th>
-                            <th>Hora Salida</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($asistencias as $asistenciasGrupo)
-                            @php
-                                $asistenciasArray = is_array($asistenciasGrupo) ? $asistenciasGrupo : $asistenciasGrupo->toArray();
-                                $entrada = collect($asistenciasArray)->where('tipo', 'entrada')->first();
-                                $salida = collect($asistenciasArray)->where('tipo', 'salida')->first();
-                                if (!$entrada) continue;
-                            @endphp
-                            <tr>
-                                <td>{{ \Carbon\Carbon::parse($entrada['fecha_hora'])->format('d/m/Y') }}</td>
-                                <td>{{ $entrada['user']['nombres_completos'] }}</td>
-                                <td>{{ $entrada['user']['documento_identidad'] }}</td>
-                                <td>{{ $entrada['user']['programa_formacion']['nombre_programa'] ?? 'N/A' }}</td>
-                                <td>{{ $entrada['user']['programa_formacion']['numero_ficha'] ?? 'N/A' }}</td>
-                                <td>{{ isset($entrada['user']['devices'][0]) ? 
-                                    ($entrada['user']['devices'][0]['marca'] . ' - ' . 
-                                     $entrada['user']['devices'][0]['serial']) : 'N/A' }}</td>
-                                <td>{{ \Carbon\Carbon::parse($entrada['fecha_hora'])->format('H:i:s') }}</td>
-                                <td>{{ $salida ? \Carbon\Carbon::parse($salida['fecha_hora'])->format('H:i:s') : '-' }}</td>
-                                <td>
-                                    @if(!$salida)
-                                        <button data-documento="{{ $entrada['user']['documento_identidad'] }}" class="btn btn-salida btn-sm btn-registrar-salida">
-                                            <i class="fas fa-sign-out-alt"></i> Registrar Salida
-                                        </button>
-                                    @endif
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+        <!-- Información del aprendiz -->
+        <div id="aprendiz-info" class="card">
+            <h2><i class="fas fa-user"></i> Información del Aprendiz</h2>
+            <div class="info-item">
+                <span class="info-label">Nombre:</span>
+                <span id="nombre-aprendiz" class="info-value"></span>
             </div>
-            <div class="pagination-container">
-                {{ $asistencias->links() }}
+            <div class="info-item">
+                <span class="info-label">Documento:</span>
+                <span id="documento-aprendiz" class="info-value"></span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Programa:</span>
+                <span id="programa-aprendiz" class="info-value"></span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Ficha:</span>
+                <span id="ficha-aprendiz" class="info-value"></span>
+            </div>
+            
+            <div class="btn-group">
+                <button id="btn-entrada" onclick="registrarAsistencia('entrada')" class="btn btn-entrada">
+                    <span class="loader"></span>
+                    <i class="fas fa-sign-in-alt"></i> Registrar Entrada
+                </button>
+                <button id="btn-salida" onclick="registrarAsistencia('salida')" class="btn btn-salida">
+                    <span class="loader"></span>
+                    <i class="fas fa-sign-out-alt"></i> Registrar Salida
+                </button>
             </div>
         </div>
     </div>
+
+    <!-- Notification toast -->
+    <div id="notification"></div>
 
     <script>
         // Configuración del escáner QR
@@ -143,8 +290,7 @@
             qrbox: {
                 width: 250,
                 height: 250
-            },
-            aspectRatio: 1.0
+            }
         };
 
         function iniciarEscanerQR() {
@@ -163,14 +309,14 @@
                         }
                     ).catch((err) => {
                         console.error(`Error al iniciar el escáner: ${err}`);
-                        alert('No se pudo acceder a la cámara. Por favor, asegúrese de que ha dado permiso para usar la cámara y que está usando HTTPS o localhost.');
+                        mostrarNotificacion('No se pudo acceder a la cámara. Verifique los permisos.', 'error');
                     });
                 } else {
-                    alert('No se detectaron cámaras en el dispositivo');
+                    mostrarNotificacion('No se detectaron cámaras en el dispositivo', 'error');
                 }
             }).catch(err => {
                 console.error(`Error al enumerar cámaras: ${err}`);
-                alert('Error al acceder a las cámaras del dispositivo');
+                mostrarNotificacion('Error al acceder a las cámaras', 'error');
             });
         }
 
@@ -201,8 +347,14 @@
 
         function onScanSuccess(decodedText, decodedResult) {
             // Reproducir un sonido de éxito
-            const beep = new Audio('data:audio/wav;base64,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');
+
+            const beep = new Audio('{{ asset('sounds/entrada.mp3') }}');
             beep.play().catch(e => console.log('No se pudo reproducir el sonido'));
+            
+            // Vibrar el dispositivo si está disponible
+            if (navigator.vibrate) {
+                navigator.vibrate(200);
+            }
             
             buscarAprendizPorQR(decodedText);
         }
@@ -210,6 +362,12 @@
         // Función para buscar aprendiz por documento
         function buscarAprendiz() {
             let documento = document.getElementById('documento').value;
+            if (!documento) {
+                mostrarNotificacion('Ingrese un número de documento', 'error');
+                return;
+            }
+            
+            mostrarCargando('btn-buscar', true);
             verificarAsistencia(documento);
         }
 
@@ -226,7 +384,7 @@
                     mostrarInformacionAprendiz(response);
                 },
                 error: function(error) {
-                    alert('Error al buscar aprendiz');
+                    mostrarNotificacion('Error al buscar aprendiz', 'error');
                 }
             });
         }
@@ -241,10 +399,12 @@
                     documento_identidad: documento
                 },
                 success: function(response) {
+                    mostrarCargando('btn-buscar', false);
                     mostrarInformacionAprendiz(response);
                 },
                 error: function(error) {
-                    alert('Error al verificar asistencia');
+                    mostrarCargando('btn-buscar', false);
+                    mostrarNotificacion('Error al verificar asistencia', 'error');
                 }
             });
         }
@@ -259,23 +419,25 @@
             if (data.user.programa_formacion) {
                 document.getElementById('programa-aprendiz').textContent = data.user.programa_formacion.nombre_programa;
                 document.getElementById('ficha-aprendiz').textContent = data.user.programa_formacion.numero_ficha;
-                document.getElementById('ambiente-aprendiz').textContent = data.user.programa_formacion.numero_ambiente;
-            }
-
-            // Información del equipo
-            if (data.user.devices && data.user.devices.length > 0) {
-                const device = data.user.devices[0];
-                document.getElementById('equipo-aprendiz').textContent = `${device.marca} - ${device.serial}`;
+            } else {
+                document.getElementById('programa-aprendiz').textContent = 'N/A';
+                document.getElementById('ficha-aprendiz').textContent = 'N/A';
             }
 
             // Mostrar/ocultar botones según el estado de asistencia
-            document.getElementById('btn-entrada').style.display = data.puede_registrar_entrada ? 'inline-block' : 'none';
-            document.getElementById('btn-salida').style.display = data.puede_registrar_salida ? 'inline-block' : 'none';
+            document.getElementById('btn-entrada').style.display = data.puede_registrar_entrada ? 'flex' : 'none';
+            document.getElementById('btn-salida').style.display = data.puede_registrar_salida ? 'flex' : 'none';
+            
+            // Scroll a la información
+            document.getElementById('aprendiz-info').scrollIntoView({ behavior: 'smooth' });
         }
 
         // Registrar asistencia
         function registrarAsistencia(tipo) {
             let documento = document.getElementById('documento-aprendiz').textContent;
+            const btnId = tipo === 'entrada' ? 'btn-entrada' : 'btn-salida';
+            mostrarCargando(btnId, true);
+            
             $.ajax({
                 url: '/admin/registrar-asistencia',
                 method: 'POST',
@@ -285,44 +447,54 @@
                     tipo: tipo
                 },
                 success: function(response) {
-                    alert('Asistencia registrada correctamente');
-                    location.reload(); // Recargar para actualizar la lista
+                    mostrarCargando(btnId, false);
+                    const mensaje = tipo === 'entrada' ? 'Entrada registrada correctamente' : 'Salida registrada correctamente';
+                    mostrarNotificacion(mensaje, 'success');
+                    
+                    // Ocultar el botón correspondiente
+                    document.getElementById(btnId).style.display = 'none';
                 },
                 error: function(error) {
-                    alert('Error al registrar asistencia');
+                    mostrarCargando(btnId, false);
+                    mostrarNotificacion('Error al registrar asistencia', 'error');
                 }
             });
         }
-
-        // Registrar salida directamente desde la tabla
-        function registrarSalidaDirecta(documento) {
-            $.ajax({
-                url: '/admin/registrar-asistencia',
-                method: 'POST',
-                data: {
-                    _token: '{{ csrf_token() }}',
-                    documento_identidad: documento,
-                    tipo: 'salida'
-                },
-                success: function(response) {
-                    alert('Salida registrada correctamente');
-                    location.reload();
-                },
-                error: function(error) {
-                    alert('Error al registrar salida');
-                }
-            });
+        
+        // Mostrar notificación
+        function mostrarNotificacion(mensaje, tipo) {
+            const notificacion = document.getElementById('notification');
+            notificacion.textContent = mensaje;
+            notificacion.style.display = 'block';
+            
+            // Cambiar color según el tipo
+            if (tipo === 'error') {
+                notificacion.style.background = '#ef4444';
+            } else {
+                notificacion.style.background = '#10b981';
+            }
+            
+            // Ocultar después de 3 segundos
+            setTimeout(() => {
+                notificacion.style.opacity = '0';
+                setTimeout(() => {
+                    notificacion.style.display = 'none';
+                    notificacion.style.opacity = '1';
+                }, 300);
+            }, 3000);
         }
-
-        // Registrar eventos para los botones de salida directa
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.btn-registrar-salida').forEach(button => {
-                button.addEventListener('click', function() {
-                    const documento = this.dataset.documento;
-                    registrarSalidaDirecta(documento);
-                });
-            });
-        });
+        
+        // Mostrar/ocultar indicador de carga
+        function mostrarCargando(btnId, mostrar) {
+            const btn = document.getElementById(btnId);
+            if (mostrar) {
+                btn.classList.add('loading');
+                btn.setAttribute('disabled', true);
+            } else {
+                btn.classList.remove('loading');
+                btn.removeAttribute('disabled');
+            }
+        }
     </script>
 </body>
 </html>
