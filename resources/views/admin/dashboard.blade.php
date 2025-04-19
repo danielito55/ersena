@@ -219,6 +219,9 @@
         <div class="logo">
             <img src="{{ asset('img/logo/logo.png') }}" alt="Logo SENA">
         </div>
+        <div class="header-title">
+            <h1>Escáner QR</h1>
+        </div>
         <form action="{{ route('logout') }}" method="POST" style="margin: 0;">
             @csrf
             <button type="submit" class="btn">
@@ -229,16 +232,17 @@
 
     <div class="container">
         <!-- Scanner QR -->
-        <div class="card">
+        <div class="card scanner-card">
             <h2><i class="fas fa-qrcode"></i> Escanear código QR</h2>
             <div id="reader"></div>
+            <div id="scan-status" class="scan-status">Esperando código QR...</div>
         </div>
 
         <!-- Búsqueda manual -->
-        <div class="card">
+        <div class="card search-card">
             <h2><i class="fas fa-search"></i> Buscar por documento</h2>
             <div class="search-box">
-                <input type="text" id="documento" class="form-control" placeholder="Número de documento">
+                <input type="text" id="documento" class="form-control" placeholder="Número de documento" inputmode="numeric" pattern="[0-9]*">
                 <button onclick="buscarAprendiz()" class="btn" id="btn-buscar">
                     <span class="loader"></span>
                     <i class="fas fa-search"></i>
@@ -282,7 +286,19 @@
     <!-- Notification toast -->
     <div id="notification"></div>
 
+    <!-- Audio elements -->
+    <audio id="sound-entrada" src="{{ asset('sounds/entrada.mp3') }}" preload="auto"></audio>
+    <audio id="sound-salida" src="{{ asset('sounds/salida.mp3') }}" preload="auto"></audio>
+    <audio id="sound-error" src="{{ asset('sounds/error.mp3') }}" preload="auto"></audio>
+    <audio id="sound-scan" src="{{ asset('sounds/scan.mp3') }}" preload="auto"></audio>
+
     <script>
+        // Variables globales
+        let lastScanned = null;
+        let scanCooldown = false;
+        let scanActive = true;
+        const COOLDOWN_TIME = 5000; // 5 segundos de espera entre escaneos del mismo QR
+
         // Configuración del escáner QR
         const html5QrCode = new Html5Qrcode("reader");
         const qrConfig = {
@@ -290,7 +306,10 @@
             qrbox: {
                 width: 250,
                 height: 250
-            }
+            },
+            aspectRatio: 1.0,
+            showTorchButtonIfSupported: true,
+            showZoomSliderIfSupported: true
         };
 
         function iniciarEscanerQR() {
@@ -310,13 +329,22 @@
                     ).catch((err) => {
                         console.error(`Error al iniciar el escáner: ${err}`);
                         mostrarNotificacion('No se pudo acceder a la cámara. Verifique los permisos.', 'error');
+                        reproducirSonido('error');
+                        document.getElementById('scan-status').textContent = 'Error en la cámara';
+                        document.getElementById('scan-status').classList.add('error');
                     });
                 } else {
                     mostrarNotificacion('No se detectaron cámaras en el dispositivo', 'error');
+                    reproducirSonido('error');
+                    document.getElementById('scan-status').textContent = 'No se detectaron cámaras';
+                    document.getElementById('scan-status').classList.add('error');
                 }
             }).catch(err => {
                 console.error(`Error al enumerar cámaras: ${err}`);
                 mostrarNotificacion('Error al acceder a las cámaras', 'error');
+                reproducirSonido('error');
+                document.getElementById('scan-status').textContent = 'Error al acceder a la cámara';
+                document.getElementById('scan-status').classList.add('error');
             });
         }
 
@@ -327,9 +355,32 @@
             });
         }
 
+        // Pausar/reanudar el escáner
+        function pausarEscaner() {
+            scanActive = false;
+            document.getElementById('scan-status').textContent = 'Escáner pausado';
+            document.getElementById('scan-status').classList.add('paused');
+        }
+
+        function reanudarEscaner() {
+            scanActive = true;
+            document.getElementById('scan-status').textContent = 'Esperando código QR...';
+            document.getElementById('scan-status').classList.remove('paused');
+            document.getElementById('scan-status').classList.remove('error');
+            document.getElementById('scan-status').classList.remove('success');
+        }
+
         // Iniciar el escáner cuando la página esté lista
         document.addEventListener('DOMContentLoaded', () => {
             iniciarEscanerQR();
+            
+            // Enfocar automáticamente la cámara al cargar la página
+            setTimeout(() => {
+                const camaraContainer = document.getElementById('reader');
+                if (camaraContainer) {
+                    camaraContainer.scrollIntoView({ behavior: 'smooth' });
+                }
+            }, 500);
         });
 
         // Detener el escáner cuando la página se cierre o se oculte
@@ -346,17 +397,48 @@
         });
 
         function onScanSuccess(decodedText, decodedResult) {
-            // Reproducir un sonido de éxito
-
-            const beep = new Audio('{{ asset('sounds/entrada.mp3') }}');
-            beep.play().catch(e => console.log('No se pudo reproducir el sonido'));
+            // Si el escáner está pausado, no procesar el código
+            if (!scanActive) {
+                return;
+            }
+            
+            // Prevenir escaneos repetidos del mismo código en un corto período
+            if (scanCooldown && lastScanned === decodedText) {
+                return;
+            }
+            
+            // Registrar el código escaneado y activar el cooldown
+            lastScanned = decodedText;
+            scanCooldown = true;
+            
+            // Pausar el escáner mientras se procesa
+            pausarEscaner();
+            
+            // Actualizar el estado del escáner
+            document.getElementById('scan-status').textContent = 'Código detectado, procesando...';
+            document.getElementById('scan-status').classList.add('success');
+            
+            // Reproducir sonido de escaneo exitoso
+            reproducirSonido('scan');
             
             // Vibrar el dispositivo si está disponible
             if (navigator.vibrate) {
                 navigator.vibrate(200);
             }
             
-            buscarAprendizPorQR(decodedText);
+            // Mostrar notificación de escaneo
+            mostrarNotificacion('Código QR escaneado, procesando...', 'info');
+            
+            // Procesar después de un segundo
+            setTimeout(() => {
+                buscarAprendizPorQR(decodedText);
+            }, 1000);
+            
+            // Restablecer el cooldown y reanudar el escáner después del tiempo definido
+            setTimeout(() => {
+                scanCooldown = false;
+                reanudarEscaner();
+            }, COOLDOWN_TIME);
         }
 
         // Función para buscar aprendiz por documento
@@ -364,6 +446,7 @@
             let documento = document.getElementById('documento').value;
             if (!documento) {
                 mostrarNotificacion('Ingrese un número de documento', 'error');
+                reproducirSonido('error');
                 return;
             }
             
@@ -382,11 +465,32 @@
                 },
                 success: function(response) {
                     mostrarInformacionAprendiz(response);
+                    
+                    // Registrar automáticamente la asistencia después de 1 segundo
+                    setTimeout(() => {
+                        registrarAsistenciaAutomatica(response);
+                    }, 1000);
                 },
                 error: function(error) {
                     mostrarNotificacion('Error al buscar aprendiz', 'error');
+                    reproducirSonido('error');
+                    document.getElementById('scan-status').textContent = 'Error: Código QR no válido';
+                    document.getElementById('scan-status').classList.add('error');
                 }
             });
+        }
+
+        // Registrar asistencia automáticamente basado en la respuesta del servidor
+        function registrarAsistenciaAutomatica(data) {
+            if (data.puede_registrar_entrada) {
+                registrarAsistencia('entrada');
+            } else if (data.puede_registrar_salida) {
+                registrarAsistencia('salida');
+            } else {
+                // No puede registrar ninguna, probablemente ya registró ambas
+                mostrarNotificacion('Ya se registraron todas las asistencias para hoy', 'info');
+                document.getElementById('scan-status').textContent = 'Sin acciones pendientes';
+            }
         }
 
         // Verificar asistencia y mostrar botones correspondientes
@@ -405,6 +509,7 @@
                 error: function(error) {
                     mostrarCargando('btn-buscar', false);
                     mostrarNotificacion('Error al verificar asistencia', 'error');
+                    reproducirSonido('error');
                 }
             });
         }
@@ -428,8 +533,19 @@
             document.getElementById('btn-entrada').style.display = data.puede_registrar_entrada ? 'flex' : 'none';
             document.getElementById('btn-salida').style.display = data.puede_registrar_salida ? 'flex' : 'none';
             
-            // Scroll a la información
-            document.getElementById('aprendiz-info').scrollIntoView({ behavior: 'smooth' });
+            // Actualizar estado del escáner
+            if (data.puede_registrar_entrada) {
+                document.getElementById('scan-status').textContent = 'Aprendiz identificado - Registrando entrada';
+            } else if (data.puede_registrar_salida) {
+                document.getElementById('scan-status').textContent = 'Aprendiz identificado - Registrando salida';
+            } else {
+                document.getElementById('scan-status').textContent = 'Aprendiz identificado - Sin acciones pendientes';
+            }
+            
+            // Scroll a la información si es búsqueda manual
+            if (!scanActive) {
+                document.getElementById('aprendiz-info').scrollIntoView({ behavior: 'smooth' });
+            }
         }
 
         // Registrar asistencia
@@ -451,14 +567,53 @@
                     const mensaje = tipo === 'entrada' ? 'Entrada registrada correctamente' : 'Salida registrada correctamente';
                     mostrarNotificacion(mensaje, 'success');
                     
+                    // Reproducir sonido según el tipo de registro
+                    reproducirSonido(tipo);
+                    
+                    // Actualizar estado del escáner
+                    document.getElementById('scan-status').textContent = tipo === 'entrada' ? 
+                        'Entrada registrada correctamente' : 'Salida registrada correctamente';
+                    document.getElementById('scan-status').classList.add('success');
+                    
                     // Ocultar el botón correspondiente
                     document.getElementById(btnId).style.display = 'none';
                 },
                 error: function(error) {
                     mostrarCargando(btnId, false);
                     mostrarNotificacion('Error al registrar asistencia', 'error');
+                    reproducirSonido('error');
+                    
+                    document.getElementById('scan-status').textContent = 'Error al registrar asistencia';
+                    document.getElementById('scan-status').classList.add('error');
                 }
             });
+        }
+        
+        // Reproducir sonido según el caso
+        function reproducirSonido(tipo) {
+            let audio;
+            
+            switch(tipo) {
+                case 'entrada':
+                    audio = document.getElementById('sound-entrada');
+                    break;
+                case 'salida':
+                    audio = document.getElementById('sound-salida');
+                    break;
+                case 'error':
+                    audio = document.getElementById('sound-error');
+                    break;
+                case 'scan':
+                    audio = document.getElementById('sound-scan');
+                    break;
+                default:
+                    return;
+            }
+            
+            // Asegurarse de reiniciar el audio antes de reproducirlo
+            audio.pause();
+            audio.currentTime = 0;
+            audio.play().catch(e => console.log('No se pudo reproducir el sonido'));
         }
         
         // Mostrar notificación
@@ -470,6 +625,8 @@
             // Cambiar color según el tipo
             if (tipo === 'error') {
                 notificacion.style.background = '#ef4444';
+            } else if (tipo === 'info') {
+                notificacion.style.background = '#3b82f6';
             } else {
                 notificacion.style.background = '#10b981';
             }
