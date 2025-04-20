@@ -47,6 +47,18 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    /**
+     * Verifica si el usuario tiene un rol específico
+     *
+     * @param string $role
+     * @return bool
+     */
+    public function hasRole($role)
+    {
+        return $this->rol === $role;
+    }
+
     public function jornada()
     {
         return $this->belongsTo(Jornada::class);

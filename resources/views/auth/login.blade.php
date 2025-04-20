@@ -3,25 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="theme-color" content="#39A900">
-    <title>Login</title>
-
-    <!-- Preload fonts -->
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&family=Poppins&display=swap" as="style">
-    <link rel="preload" as="image" href="{{ asset('img/logo/logo.png') }}">
-    
+    <title>Login</title>    
     <!-- Estilos -->
-    <link rel="stylesheet" href="{{ asset('css/login.css') }}" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="{{ asset('css/login.css') }}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&family=Poppins&display=swap">
-    
     <!-- icon -->
     <link rel="icon" href="{{ asset('img/icon/icon.ico') }}" type="image/x-icon">
-    
-    <!-- Cache control -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
 </head> 
 <body class="index-page">
 
