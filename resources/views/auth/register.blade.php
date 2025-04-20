@@ -100,6 +100,18 @@
                                 <label for="numero_ambiente">Número de Ambiente</label>
                                 <input type="text" id="numero_ambiente" name="numero_ambiente" required value="{{ old('numero_ambiente') }}" class="auto-next">
                             </div>
+
+                            <div class="register-form-group">
+                                <label for="jornada_id">Jornada</label>
+                                <select id="jornada_id" name="jornada_id" required class="auto-next">
+                                    <option value="">Selecciona una jornada</option>
+                                    @foreach(\App\Models\Jornada::all() as $jornada)
+                                        <option value="{{ $jornada->id }}" {{ old('jornada_id') == $jornada->id ? 'selected' : '' }}>
+                                            {{ ucfirst($jornada->nombre) }} ({{ \Carbon\Carbon::parse($jornada->hora_entrada)->format('h:i A') }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
                     </div>
 

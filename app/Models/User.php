@@ -25,6 +25,7 @@ class User extends Authenticatable
         'rol',
         'qr_code',
         'profile_photo',
+        'jornada_id',
     ];
 
     /**
@@ -46,6 +47,10 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+    public function jornada()
+    {
+        return $this->belongsTo(Jornada::class);
+    }
 
     public function devices()
     {

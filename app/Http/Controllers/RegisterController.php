@@ -32,6 +32,7 @@ class RegisterController extends Controller
             'marca' => 'required|string|max:255',
             'serial' => 'required|string|max:255',
             'foto_serial' => 'required|image',
+            'jornada_id' => 'required|exists:jornadas,id',
         ]);
 
         // Generar un identificador único para el QR que incluya el documento de identidad
@@ -44,6 +45,7 @@ class RegisterController extends Controller
             'password' => Hash::make($validated['password']),
             'rol' => 'aprendiz',
             'qr_code' => $qrIdentifier,
+            'jornada_id' => $validated['jornada_id'],
         ]);
 
         // Crear el registro del programa de formación
