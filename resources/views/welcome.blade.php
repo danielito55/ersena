@@ -20,7 +20,7 @@
             .ticker {
               display: inline-block;
               white-space: nowrap;
-              animation: ticker 30s linear infinite;
+              animation: ticker 60s linear infinite;
             }
             @keyframes ticker {
               0% { transform: translateX(100%); }
@@ -92,16 +92,25 @@
                 setInterval(loadAsistencias, 1000);
                 
                 // Actualizar ticker cada 60 segundos
-                setInterval(loadTickerMessages, 120000);
+                setInterval(loadTickerMessages, 60000);
             });
 
             function loadTickerMessages() {
                 fetch('/api/ticker-messages')
                     .then(response => response.json())
                     .then(data => {
-                        if (data.status === 'success' && data.messages && data.messages.length > 0) {
-                            updateTicker(data.messages);
+                        console.log('Respuesta del ticker:', data); // Para depuración
+                        if (data.status === 'success' && Array.isArray(data.messages) && data.messages.length > 0) {
+                            // Verificar que los mensajes no estén vacíos
+                            const validMessages = data.messages.filter(msg => msg && msg.trim() !== '');
+                            if (validMessages.length > 0) {
+                                updateTicker(validMessages);
+                            } else {
+                                console.log('No hay mensajes válidos');
+                                updateTicker(['¡La puntualidad es la clave del éxito! ⭐', 'Tu compromiso construye un mejor futuro 🎯', 'La disciplina de hoy es el éxito del mañana 💪']);
+                            }
                         } else {
+                            console.log('Formato de respuesta inválido o sin mensajes');
                             updateTicker(['¡La puntualidad es la clave del éxito! ⭐', 'Tu compromiso construye un mejor futuro 🎯', 'La disciplina de hoy es el éxito del mañana 💪']);
                         }
                     })
@@ -124,7 +133,7 @@
                 // Reiniciar la animación
                 ticker.style.animation = 'none';
                 ticker.offsetHeight; // Trigger reflow
-                ticker.style.animation = 'ticker 30s linear infinite';
+                ticker.style.animation = 'ticker 60s linear infinite';
             }
 
             function loadAsistencias() {
