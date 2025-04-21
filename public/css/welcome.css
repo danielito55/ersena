@@ -459,7 +459,7 @@
                     gap: 1rem;
                 }
 
-                .ticker-container {
+                .ticker-wrap {
                     display: none;
                 }
             }
@@ -521,71 +521,7 @@
                 }
             }
 
-            .ticker-container {
-                position: relative;
-                width: 100%;
-                height: 36px;
-                background-color: transparent;
-                overflow: hidden;
-            }
-
-            .ticker-mask {
-                position: absolute;
-                inset: 0;
-                background: linear-gradient(
-                    90deg,
-                    white,
-                    transparent 5%,
-                    transparent 95%,
-                    white
-                );
-                z-index: 2;
-                pointer-events: none;
-            }
-
-            .ticker-track {
-                position: absolute;
-                white-space: nowrap;
-                will-change: transform;
-                animation: ticker 30s linear infinite;
-                display: flex;
-                align-items: center;
-                height: 100%;
-            }
-
-            .ticker-item {
-                display: inline-flex;
-                align-items: center;
-                padding: 0 16px;
-                font-size: 0.9rem;
-                font-weight: 500;
-                font-family: var(--font-secondary);
-            }
-
-            .ticker-item span {
-                display: inline-block;
-                padding: 0 3px;
-                color: #2C3E50;
-                opacity: 0.85;
-                transition: transform 0.2s ease;
-            }
-
-            .ticker-item:hover span {
-                opacity: 1;
-                transform: translateY(-1px);
-            }
-
-            .ticker-item span:nth-child(odd) {
-                color: #39A900;
-                font-weight: 600;
-            }
-
-            .ticker-item span:nth-child(even) {
-                color: #39A900;
-                opacity: 0.8;
-                font-weight: 500;
-            }
-
+            /* Removed old ticker styles */
             .logo-emoji {
                 font-size: 1rem;
                 margin: 0 4px;
@@ -597,16 +533,4 @@
             .ticker-item:hover .logo-emoji {
                 opacity: 1;
                 transform: translateY(0) scale(1.1);
-            }
-
-            @keyframes ticker {
-                0% { transform: translateX(100%); }
-                100% { transform: translateX(-100%); }
-            }
-
-            @media (prefers-reduced-motion: reduce) {
-                .ticker-track {
-                    animation: none;
-                    transform: translateX(0);
-                }
             }

@@ -55,9 +55,8 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'http://localhost'),
-
-    'asset_url' => env('ASSET_URL'),
+    'url' => env('APP_URL', 'https://ersena.test'),
+'asset_url' => env('ASSET_URL', 'https://ersena.test'),
 
     /*
     |--------------------------------------------------------------------------
@@ -165,7 +164,7 @@ return [
          */
         App\Providers\AppServiceProvider::class,
         App\Providers\AuthServiceProvider::class,
-        // App\Providers\BroadcastServiceProvider::class,
+        App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
     ])->toArray(),
